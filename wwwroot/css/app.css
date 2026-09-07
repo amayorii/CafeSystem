@@ -1,3 +1,41 @@
+:root {
+    --bg-main: #121212;
+    --bg-secondary: #1e1e1e;
+    --accent-color: #d97706; /* Coffee-amber accent */
+    --text-main: #ffffff;
+    --text-muted: #a1a1aa;
+}
+
+body {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Sidebar styling */
+.sidebar {
+    background-image: none !important;
+    background-color: var(--bg-secondary) !important;
+    border-right: 1px solid #333;
+}
+
+/* Top bar styling */
+.top-row {
+    background-color: var(--bg-secondary) !important;
+    border-bottom: 1px solid #333;
+}
+
+/* Nav links hover and active states */
+.nav-item .nav-link {
+    color: var(--text-muted) !important;
+    transition: 0.2s all;
+}
+
+.nav-item .nav-link:hover, .nav-item .nav-link.active {
+    color: var(--accent-color) !important;
+    background-color: rgba(217, 119, 6, 0.1) !important;
+}
+
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
