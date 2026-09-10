@@ -1,0 +1,6 @@
+@CafeSystem.Server_HostAddress = http://localhost:5149
+
+GET {{CafeSystem.Server_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

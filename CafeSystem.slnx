@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="CafeSystem.Client/CafeSystem.Client.csproj" />
+  <Project Path="CafeSystem.Server/CafeSystem.Server.csproj" />
+  <Project Path="CafeSystem.Shared/CafeSystem.Shared.csproj" />
+</Solution>
