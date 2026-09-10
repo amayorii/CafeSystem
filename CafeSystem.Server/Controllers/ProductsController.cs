@@ -1,8 +1,9 @@
 using CafeSystem.Server.Data;
 using CafeSystem.Shared.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing.Internal;
 using Microsoft.EntityFrameworkCore;
+
+namespace CafeSystem.Server.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -41,15 +42,11 @@ public class ProductsController : ControllerBase
     public async Task<ActionResult> UpdateProductAsync(int id, [FromBody] Product updatedProduct)
     {
         if (id != updatedProduct.Id)
-        {
             return BadRequest();
-        }
 
         var product = await _db.Products.FindAsync(id);
         if (product is null)
-        {
             return NotFound();
-        }
 
         product.Name = updatedProduct.Name;
         product.Description = updatedProduct.Description;
