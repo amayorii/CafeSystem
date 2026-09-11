@@ -7,7 +7,7 @@ public class Transaction
     public decimal TotalAmount { get; set; }
     public PaymentMethod Method { get; set; }
     public decimal ChangeGiven { get; set; }
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
 
 public enum PaymentMethod

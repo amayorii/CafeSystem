@@ -1,0 +1,58 @@
+@page "/menu"
+@inject HttpClient Http
+
+<PageTitle>Our Menu</PageTitle>
+
+<h1 class="font-heading" style="margin-bottom: 2rem;">Our Menu</h1>
+
+@if (products == null)
+{
+    <p><em>Loading fresh items...</em></p>
+}
+else if (!products.Any())
+{
+    <p>No products available yet.</p>
+}
+else
+{
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 2rem;">
+        @foreach (var product in products)
+        {
+            <div class="glass-card">
+                <img src="@(string.IsNullOrEmpty(product.ImageUrl) ? "https://placehold.co/600x400/F8F5F0/6B553D?text=" + Uri.EscapeDataString(product.Name) : product.ImageUrl)" alt="@product.Name" />
+                
+                <h3 class="card-title">@product.Name</h3>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <span style="background-color: var(--color-pale-cornflower); padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.8rem; font-weight: 600; color: var(--color-expresso);">
+                        @product.Category
+                    </span>
+                    <span class="card-price">$@product.Price.ToString("0.00")</span>
+                </div>
+                
+                <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 1.5rem; flex-grow: 1;">
+                    @product.Description
+                </p>
+                
+                <button class="btn-primary" style="width: 100%;">Add to Order</button>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private Product[]? products;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            products = await Http.GetFromJsonAsync<Product[]>("api/products");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching products: {ex.Message}");
+            products = Array.Empty<Product>();
+        }
+    }
+}

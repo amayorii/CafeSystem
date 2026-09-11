@@ -9,7 +9,7 @@ public class Order
     public decimal TotalAmount => Items.Sum(i => i.TotalPrice);
 
     public OrderStatus Status { get; set; } = OrderStatus.Open;
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
 
 public enum OrderStatus
