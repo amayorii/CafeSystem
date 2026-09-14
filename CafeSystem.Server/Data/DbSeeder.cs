@@ -18,10 +18,10 @@ public static class DbSeeder
             await context.Products.ExecuteDeleteAsync();
             var products = new List<Product>
             {
-                new Product { Name = "Espresso", Description = "Strong and bold classic espresso.", Price = 2.50m, Category = "Coffee" },
-                new Product { Name = "Cappuccino", Description = "Espresso with steamed milk and a thick layer of foam.", Price = 3.80m, Category = "Coffee" },
-                new Product { Name = "Latte", Description = "Espresso with lots of steamed milk and a light layer of foam.", Price = 4.20m, Category = "Coffee" },
-                new Product { Name = "Americano", Description = "Espresso diluted with hot water.", Price = 3.00m, Category = "Coffee" },
+                new Product { Name = "Espresso", Description = "Strong and bold classic espresso.", Price = 2.50m, Category = "Coffee", ImageUrl = "images/espresso_1789131881322.jpg" },
+                new Product { Name = "Cappuccino", Description = "Espresso with steamed milk and a thick layer of foam.", Price = 3.80m, Category = "Coffee", ImageUrl = "images/cappuccino_1789131891557.jpg" },
+                new Product { Name = "Latte", Description = "Espresso with lots of steamed milk and a light layer of foam.", Price = 4.20m, Category = "Coffee", ImageUrl = "images/latte_1789373512811.jpg" },
+                new Product { Name = "Americano", Description = "Espresso diluted with hot water.", Price = 3.00m, Category = "Coffee", ImageUrl = "images/americano_1789373524657.jpg" },
                 new Product { Name = "Mocha", Description = "Espresso with chocolate and steamed milk.", Price = 4.50m, Category = "Coffee" },
                 new Product { Name = "Croissant", Description = "Buttery, flaky, and fresh from the oven.", Price = 3.50m, Category = "Pastries" },
                 new Product { Name = "Blueberry Muffin", Description = "Soft muffin bursting with fresh blueberries.", Price = 3.00m, Category = "Pastries" },

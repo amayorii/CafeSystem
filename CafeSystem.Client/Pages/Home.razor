@@ -1,9 +1,407 @@
 @page "/"
+@inject HttpClient Http
 
-<PageTitle>Cafe System - Home</PageTitle>
+<PageTitle>Lumina Cafe - POS</PageTitle>
 
-<div class="hero">
-    <h1>Welcome to Cafe System</h1>
-    <p>Experience the finest coffee and pastries, managed seamlessly with our modern point of sale system.</p>
-    <a href="/menu" class="btn-primary" style="text-decoration: none;">View Our Menu</a>
+<div class="pos-layout">
+    <!-- LEFT PANEL: Products (Ordering) OR Dynamic Checkout View (Payment) -->
+    <div class="pos-products-area" style="@(isCheckingOut ? "flex: 0 0 500px;" : "")">
+        @if (products == null)
+        {
+            <div style="display: flex; justify-content: center; align-items: center; height: 100%;">
+                <p style="font-size: 1.2rem; color: var(--text-secondary);">Loading terminal...</p>
+            </div>
+        }
+        else if (isCheckingOut)
+        {
+            <div style="padding: 2rem; display: flex; flex-direction: column; height: 100%;">
+                <div
+                    style="flex: 1; display: flex; flex-direction: column; justify-content: center; max-width: 400px; margin: 0 auto; width: 100%;">
+
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-bottom: 1.5rem;">
+                        <button class="btn-secondary"
+                                style="padding: 0; font-size: 1.2rem; height: 50px; border-color: rgba(107, 85, 61, 0.2);"
+                                @onclick='() => SetCash(5)'>$5</button>
+                        <button class="btn-secondary"
+                                style="padding: 0; font-size: 1.2rem; height: 50px; border-color: rgba(107, 85, 61, 0.2);"
+                                @onclick='() => SetCash(10)'>$10</button>
+                        <button class="btn-secondary"
+                                style="padding: 0; font-size: 1.2rem; height: 50px; border-color: rgba(107, 85, 61, 0.2);"
+                                @onclick='() => SetCash(20)'>$20</button>
+                        <button class="btn-secondary"
+                                style="padding: 0; font-size: 1.2rem; height: 50px; border-color: rgba(107, 85, 61, 0.2);"
+                                @onclick='() => SetCash(50)'>$50</button>
+                        <button class="btn-secondary"
+                                style="padding: 0; font-size: 1.2rem; height: 50px; border-color: rgba(107, 85, 61, 0.2);"
+                                @onclick='() => SetCash(100)'>$100</button>
+                        <button class="btn-primary"
+                                style="padding: 0; font-size: 1.2rem; height: 50px; background-color: #2E7D32;"
+                                @onclick='() => SetCash(Total)'>Exact</button>
+                    </div>
+
+                    <div class="numpad-grid">
+                        <button class="numpad-btn" @onclick='() => TypeNumpad("7")'>7</button>
+                        <button class="numpad-btn" @onclick='() => TypeNumpad("8")'>8</button>
+                        <button class="numpad-btn" @onclick='() => TypeNumpad("9")'>9</button>
+                        <button class="numpad-btn" @onclick='() => TypeNumpad("4")'>4</button>
+                        <button class="numpad-btn" @onclick='() => TypeNumpad("5")'>5</button>
+                        <button class="numpad-btn" @onclick='() => TypeNumpad("6")'>6</button>
+                        <button class="numpad-btn" @onclick='() => TypeNumpad("1")'>1</button>
+                        <button class="numpad-btn" @onclick='() => TypeNumpad("2")'>2</button>
+                        <button class="numpad-btn" @onclick='() => TypeNumpad("3")'>3</button>
+                        <button class="numpad-btn" @onclick='() => TypeNumpad(".")'>.</button>
+                        <button class="numpad-btn" @onclick='() => TypeNumpad("0")'>0</button>
+                        <button class="numpad-btn" @onclick='ClearNumpad' style="color: #D32F2F;">C</button>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <!-- Category Filters -->
+            <div class="category-filters">
+                <button class="filter-btn @(selectedCategory == "All" ? "active" : "")"
+                        @onclick="@(() => SelectCategory("All"))">All</button>
+                @foreach (var category in categories)
+                {
+                    <button class="filter-btn @(selectedCategory == category ? "active" : "")"
+                            @onclick="@(() => SelectCategory(category))">@category</button>
+                }
+            </div>
+
+            <!-- Product Grid -->
+            <div class="pos-grid">
+                @foreach (var product in filteredProducts)
+                {
+                    <div class="pos-card" @onclick="() => AddToOrder(product)">
+                        <img src="@(string.IsNullOrEmpty(product.ImageUrl) ? "https://placehold.co/400x300/F8F5F0/6B553D?text=" + Uri.EscapeDataString(product.Name) : product.ImageUrl)"
+                             alt="@product.Name" />
+                        <span class="pos-card-title">@product.Name</span>
+                        <span class="pos-card-price">$@product.Price.ToString("0.00")</span>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <!-- RIGHT PANEL: Receipt (Ordering) OR Payment Options (Checkout) -->
+    <div class="pos-receipt-area"
+         style="@(isCheckingOut ? "flex: 1; width: auto; background: var(--bg-primary);" : "")">
+        @if (isCheckingOut)
+        {
+            <div style="padding: 3rem; display: flex; flex-direction: column; height: 100%;">
+                <div
+                    style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; max-width: 450px; margin: 0 auto; width: 100%; gap: 1.5rem;">
+                    <h3 class="font-heading"
+                        style="margin-top: 0; font-size: 2rem; text-align: center; margin-bottom: 1rem; text-transform: uppercase;">
+                        ОПЛАТА
+                    </h3>
+                    <!-- Cash Button -->
+                    <button class="payment-method-btn @(selectedPaymentMethod == "Cash" ? "active" : "")"
+                            style="padding: 1rem 1.5rem; justify-content: space-between; border-width: 2px; align-items: center; width: 100%; height: 90px;"
+                            @onclick='() => SelectPaymentMethod("Cash")'>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="font-size: 2rem;">💵</span>
+                            <span style="font-size: 1.5rem;">Готівка</span>
+                        </div>
+                        @if (selectedPaymentMethod == "Cash" && cashTendered > 0)
+                        {
+                            <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; line-height: 1.1; text-align: right;">
+                                <span style="font-size: 1.8rem; font-weight: 700; margin: 0;">$@cashInputString</span>
+                                @if (cashTendered >= Total && Total > 0)
+                                {
+                                    <span style="font-size: 1rem; color: #2E7D32; font-weight: 600; margin-top: 0.2rem;">Решта: $@Change.ToString("0.00")</span>
+                                }
+                                else if (cashTendered > 0 && cashTendered < Total)
+                                {
+                                    <span style="font-size: 1rem; color: #D32F2F; font-weight: 600; margin-top: 0.2rem;">Не вистачає: $@((Total - cashTendered).ToString("0.00"))</span>
+                                }
+                            </div>
+                        }
+                    </button>
+
+                    <!-- Card Button -->
+                    <button class="payment-method-btn @(selectedPaymentMethod == "Card" ? "active" : "")"
+                            style="padding: 1rem 1.5rem; justify-content: space-between; border-width: 2px; align-items: center; width: 100%; height: 90px;"
+                            @onclick='() => SelectPaymentMethod("Card")'>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="font-size: 2rem;">💳</span>
+                            <span style="font-size: 1.5rem;">Картка</span>
+                        </div>
+                        @if (selectedPaymentMethod == "Card" && cashTendered > 0)
+                        {
+                            <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; line-height: 1.1; text-align: right;">
+                                <span style="font-size: 1.8rem; font-weight: 700; margin: 0;">$@cashInputString</span>
+                                @if (cashTendered >= Total && Total > 0)
+                                {
+                                    <span style="font-size: 1rem; color: #2E7D32; font-weight: 600; margin-top: 0.2rem;">Решта: $@Change.ToString("0.00")</span>
+                                }
+                                else if (cashTendered > 0 && cashTendered < Total)
+                                {
+                                    <span style="font-size: 1rem; color: #D32F2F; font-weight: 600; margin-top: 0.2rem;">Не вистачає: $@((Total - cashTendered).ToString("0.00"))</span>
+                                }
+                            </div>
+                        }
+                    </button>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; align-items: center; gap: 1.5rem; margin-top: auto;">
+                    <button
+                        style="background: rgba(211, 47, 47, 0.1); border: none; color: #D32F2F; font-size: 1.5rem; font-weight: 700; cursor: pointer; text-transform: uppercase; padding: 1rem 2rem; border-radius: var(--radius-md); transition: all 0.2s;"
+                        @onclick="CancelCheckout" onmouseover="this.style.background='rgba(211, 47, 47, 0.2)'"
+                        onmouseout="this.style.background='rgba(211, 47, 47, 0.1)'">
+                        ОТМЕНА
+                    </button>
+                    <button class="btn-primary"
+                            style="height: 70px; font-size: 1.8rem; border-radius: var(--radius-md); padding: 0 4rem; box-shadow: 0 5px 15px rgba(107, 85, 61, 0.1);"
+                            disabled="@(selectedPaymentMethod == "Cash" && cashTendered < Total)" @onclick="SubmitOrder">
+                        ОПЛАТА
+                    </button>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div style="padding: 1.5rem; border-bottom: 1px solid rgba(107, 85, 61, 0.1);">
+                <h2 class="font-heading" style="margin: 0;">Current Order</h2>
+                <p style="margin: 0; color: var(--text-secondary); font-size: 0.9rem;">
+                    Ticket #@DateTime.Now.ToString("HHmmss")
+                </p>
+            </div>
+
+            <div style="flex-grow: 1; overflow-y: auto; padding: 1rem;">
+                @if (!currentOrder.Any())
+                {
+                    <div
+                        style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-secondary); opacity: 0.5;">
+                        <span style="font-size: 3rem; margin-bottom: 1rem;">🛒</span>
+                        <p>Order is empty</p>
+                    </div>
+                }
+                else
+                {
+                    @foreach (var item in currentOrder)
+                    {
+                        <div @onclick="() => ToggleExpand(item)"
+                             style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px dashed rgba(107, 85, 61, 0.2); cursor: pointer; transition: all 0.2s;">
+
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div style="font-weight: 600; font-size: 1.1rem; flex-grow: 1;">
+                                    @item.Product.Name
+                                    @if (!item.IsExpanded)
+                                    {
+                                        <span
+                                            style="color: var(--text-secondary); opacity: 0.5; font-size: 0.9rem; margin-left: 0.5rem; transition: all 0.2s;">x
+                                            @item.Quantity</span>
+                                    }
+                                </div>
+                                <div style="font-weight: 700; width: 70px; text-align: right; color: var(--color-chambray);">
+                                    $@((item.Product.Price * item.Quantity).ToString("0.00"))
+                                </div>
+                            </div>
+
+                            @if (item.IsExpanded)
+                            {
+                                <div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
+                                    <div
+                                        style="display: flex; align-items: center; gap: 0.8rem; background: var(--bg-primary); padding: 0.3rem; border-radius: 20px;">
+                                        <button @onclick="() => DecreaseQuantity(item)" @onclick:stopPropagation="true"
+                                                style="border: none; background: white; width: 32px; height: 32px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; color: var(--color-expresso); box-shadow: 0 2px 5px rgba(0,0,0,0.1); font-size: 1.2rem;">-</button>
+                                        <span
+                                            style="font-weight: 700; min-width: 20px; text-align: center; font-size: 1.2rem;">@item.Quantity</span>
+                                        <button @onclick="() => IncreaseQuantity(item)" @onclick:stopPropagation="true"
+                                                style="border: none; background: white; width: 32px; height: 32px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; color: var(--color-expresso); box-shadow: 0 2px 5px rgba(0,0,0,0.1); font-size: 1.2rem;">+</button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                }
+            </div>
+
+            <div style="padding: 1.5rem; background: var(--bg-primary); border-top: 1px solid rgba(107, 85, 61, 0.1);">
+                <div
+                    style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; color: var(--text-secondary);">
+                    <span>Subtotal</span>
+                    <span>$@Subtotal.ToString("0.00")</span>
+                </div>
+                <div
+                    style="display: flex; justify-content: space-between; margin-bottom: 1rem; color: var(--text-secondary);">
+                    <span>Tax (8%)</span>
+                    <span>$@Tax.ToString("0.00")</span>
+                </div>
+                <div
+                    style="display: flex; justify-content: space-between; margin-bottom: 1.5rem; font-size: 1.5rem; font-weight: 700;">
+                    <span>Total</span>
+                    <span style="color: var(--color-chambray);">$@Total.ToString("0.00")</span>
+                </div>
+
+                <button class="btn-primary" disabled="@(!currentOrder.Any())" @onclick="StartCheckout"
+                        style="margin-top: 1rem;">
+                    PAY $@Total.ToString("0.00")
+                </button>
+            </div>
+        }
+    </div>
 </div>
+
+@code {
+    private Product[]? products;
+    private List<string> categories = new();
+    private string selectedCategory = "All";
+
+    private class CartItem
+    {
+        public Product Product { get; set; } = new();
+        public int Quantity { get; set; }
+        public bool IsExpanded { get; set; }
+    }
+
+    private List<CartItem> currentOrder = new();
+
+    private IEnumerable<Product> filteredProducts =>
+        selectedCategory == "All"
+            ? (products ?? Array.Empty<Product>())
+            : (products?.Where(p => p.Category == selectedCategory) ?? Array.Empty<Product>());
+
+    private decimal Subtotal => Math.Round(currentOrder.Sum(i => i.Product.Price * i.Quantity), 2,
+MidpointRounding.AwayFromZero);
+    private decimal Tax => Math.Round(Subtotal * 0.08m, 2, MidpointRounding.AwayFromZero);
+    private decimal Total => Math.Round(Subtotal + Tax, 2, MidpointRounding.AwayFromZero);
+
+    private bool isCheckingOut = false;
+    private string selectedPaymentMethod = "Card";
+    private string cashInputString = "";
+    private decimal cashTendered = 0;
+    private decimal Change => Math.Max(0, cashTendered - Total);
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            products = await Http.GetFromJsonAsync<Product[]>("api/products");
+            if (products != null)
+            {
+                categories = products.Select(p => p.Category).Distinct().ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching products: {ex.Message}");
+            products = Array.Empty<Product>();
+        }
+    }
+
+    private void SelectCategory(string category)
+    {
+        selectedCategory = category;
+    }
+
+    private void AddToOrder(Product product)
+    {
+        var existingItem = currentOrder.FirstOrDefault(i => i.Product.Id == product.Id);
+        if (existingItem != null)
+        {
+            existingItem.Quantity++;
+        }
+        else
+        {
+            currentOrder.Add(new CartItem { Product = product, Quantity = 1, IsExpanded = false });
+        }
+    }
+
+    private void ToggleExpand(CartItem item)
+    {
+        if (isCheckingOut) return;
+
+        foreach (var orderItem in currentOrder)
+        {
+            if (orderItem != item)
+                orderItem.IsExpanded = false;
+        }
+
+        item.IsExpanded = !item.IsExpanded;
+    }
+
+    private void IncreaseQuantity(CartItem item)
+    {
+        item.Quantity++;
+    }
+
+    private void DecreaseQuantity(CartItem item)
+    {
+        item.Quantity--;
+        if (item.Quantity <= 0)
+        {
+            currentOrder.Remove(item);
+        }
+    }
+
+    private async Task SubmitOrder()
+    {
+        Console.WriteLine($"Order submitted. Paid via: {selectedPaymentMethod}");
+        currentOrder.Clear();
+        cashTendered = 0;
+        cashInputString = "";
+        isCheckingOut = false;
+        selectedPaymentMethod = "Card";
+    }
+
+    private void SelectPaymentMethod(string method)
+    {
+        if (selectedPaymentMethod != method)
+        {
+            selectedPaymentMethod = method;
+            cashInputString = "";
+            cashTendered = 0;
+        }
+    }
+
+    private void StartCheckout()
+    {
+        isCheckingOut = true;
+        cashInputString = "";
+        cashTendered = 0;
+
+        foreach (var item in currentOrder)
+        {
+            item.IsExpanded = false;
+        }
+    }
+
+    private void CancelCheckout()
+    {
+        isCheckingOut = false;
+    }
+
+    private void TypeNumpad(string key)
+    {
+        if (key == "." && cashInputString.Contains(".")) return;
+
+        if (cashInputString.Contains("."))
+        {
+            var parts = cashInputString.Split('.');
+            if (parts.Length > 1 && parts[1].Length >= 2) return;
+        }
+
+        cashInputString += key;
+
+        if (decimal.TryParse(cashInputString, System.Globalization.NumberStyles.Any,
+System.Globalization.CultureInfo.InvariantCulture, out var amount))
+        {
+            cashTendered = amount;
+        }
+    }
+
+    private void SetCash(decimal amount)
+    {
+        cashTendered = amount;
+        cashInputString = amount.ToString("0.##");
+    }
+
+    private void ClearNumpad()
+    {
+        cashInputString = "";
+        cashTendered = 0;
+    }
+}
