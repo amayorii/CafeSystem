@@ -1,0 +1,35 @@
+@using CafeSystem.Shared.Models
+@inject CafeSystem.Client.Services.OrderState OrderState
+
+@if (Products == null)
+{
+    <div style="display: flex; justify-content: center; align-items: center; height: 100%;">
+        <p style="font-size: 1.2rem; color: var(--text-secondary);">Loading terminal...</p>
+    </div>
+}
+else
+{
+    <!-- Category filters -->
+    <div class="category-filters">
+        <button class="filter-btn @(SelectedCategory == "All" ? "active" : "")"
+                @onclick="@(() => SelectCategory("All"))">All</button>
+        @foreach (var category in Categories)
+        {
+            <button class="filter-btn @(SelectedCategory == category ? "active" : "")"
+                    @onclick="@(() => SelectCategory(category))">@category</button>
+        }
+    </div>
+
+    <!-- Product grid -->
+    <div class="pos-grid">
+        @foreach (var product in FilteredProducts)
+        {
+            <div class="pos-card" @onclick="() => OrderState.AddToOrder(product)">
+                <img src="@(string.IsNullOrEmpty(product.ImageUrl) ? "https://placehold.co/400x300/F8F5F0/6B553D?text=" + Uri.EscapeDataString(product.Name) : product.ImageUrl)"
+                     alt="@product.Name" />
+                <span class="pos-card-title">@product.Name</span>
+                <span class="pos-card-price">$@product.Price.ToString("0.00")</span>
+            </div>
+        }
+    </div>
+}

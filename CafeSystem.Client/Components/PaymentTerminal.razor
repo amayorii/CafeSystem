@@ -1,0 +1,90 @@
+@implements IDisposable
+@inject CafeSystem.Client.Services.OrderState OrderState
+
+<div style="padding: 3rem; display: flex; flex-direction: column; height: 100%;">
+    <div
+        style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; max-width: 450px; margin: 0 auto; width: 100%; gap: 1.5rem;">
+        <h3 class="font-heading"
+            style="margin-top: 0; font-size: 2rem; text-align: center; margin-bottom: 1rem; text-transform: uppercase;">
+            TO PAY: $@OrderState.Total.ToString("0.00")
+        </h3>
+        <!-- Cash button -->
+        <button class="payment-method-btn @(OrderState.SelectedPaymentMethod == "Cash" ? "active" : "")"
+                style="padding: 1rem 1.5rem; justify-content: space-between; border-width: 2px; align-items: center; width: 100%;"
+                @onclick='() => OrderState.SelectPaymentMethod("Cash")'>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span style="font-size: 2rem;">💵</span>
+                <span style="font-size: 1.5rem;">Cash</span>
+            </div>
+            @if (OrderState.SelectedPaymentMethod == "Cash" && OrderState.CashTendered > 0)
+            {
+                <div
+                    style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; line-height: 1.1; text-align: right;">
+                    <span style="font-size: 1.8rem; font-weight: 700; margin: 0;">$@OrderState.CashInputString</span>
+                    @if (OrderState.CashTendered >= OrderState.Total && OrderState.Total > 0)
+                    {
+                        <span style="font-size: 1rem; color: #2E7D32; font-weight: 600; margin-top: 0.2rem;">Change:
+                            $@OrderState.Change.ToString("0.00")</span>
+                        }
+                    else if (OrderState.CashTendered > 0 && OrderState.CashTendered < OrderState.Total)
+                        {
+                            <span style="font-size: 1rem; color: #D32F2F; font-weight: 600; margin-top: 0.2rem;">Missing:
+                                $@((OrderState.Total - OrderState.CashTendered).ToString("0.00"))</span>
+                            }
+                        </div>
+                    }
+                </button>
+
+                <button class="payment-method-btn @(OrderState.SelectedPaymentMethod == "Card" ? "active" : "")"
+                        style="padding: 1rem 1.5rem; justify-content: space-between; border-width: 2px; align-items: center; width: 100%;"
+                        @onclick='() => OrderState.SelectPaymentMethod("Card")'>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-size: 2rem;">💳</span>
+                        <span style="font-size: 1.5rem;">Card</span>
+                    </div>
+                    @if (OrderState.SelectedPaymentMethod == "Card" && OrderState.CashTendered > 0)
+                    {
+                        <div
+                            style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; line-height: 1.1; text-align: right;">
+                            <span style="font-size: 1.8rem; font-weight: 700; margin: 0;">$@OrderState.CashInputString</span>
+                            @if (OrderState.CashTendered >= OrderState.Total && OrderState.Total > 0)
+                            {
+                                <span style="font-size: 1rem; color: #2E7D32; font-weight: 600; margin-top: 0.2rem;">Change:
+                                    $@OrderState.Change.ToString("0.00")</span>
+                                }
+                    else if (OrderState.CashTendered > 0 && OrderState.CashTendered < OrderState.Total)
+                                {
+                                    <span style="font-size: 1rem; color: #D32F2F; font-weight: 600; margin-top: 0.2rem;">Missing:
+                                        $@((OrderState.Total - OrderState.CashTendered).ToString("0.00"))</span>
+                                    }
+                                </div>
+                            }
+                        </button>
+                    </div>
+
+                    <div style="display: flex; justify-content: flex-end; align-items: center; gap: 1.5rem; margin-top: auto;">
+                        <button
+                            style="background: rgba(211, 47, 47, 0.1); border: none; color: #D32F2F; font-size: 1.5rem; font-weight: 700; cursor: pointer; text-transform: uppercase; padding: 1rem 2rem; border-radius: var(--radius-md); transition: all 0.2s;"
+                            @onclick="OrderState.CancelCheckout" onmouseover="this.style.background='rgba(211, 47, 47, 0.2)'"
+                            onmouseout="this.style.background='rgba(211, 47, 47, 0.1)'">
+                            CANCEL
+                        </button>
+                        <button class="btn-primary"
+                                style="height: 70px; font-size: 1.8rem; border-radius: var(--radius-md); padding: 0 4rem; box-shadow: 0 5px 15px rgba(107, 85, 61, 0.1);"
+                                disabled="@(OrderState.CashTendered < OrderState.Total)" @onclick="OrderState.SubmitOrder">
+                            PAY $@OrderState.CashInputString
+                        </button>
+                    </div>
+                </div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        OrderState.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        OrderState.OnChange -= StateHasChanged;
+    }
+}

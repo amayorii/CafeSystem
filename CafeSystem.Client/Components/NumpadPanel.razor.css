@@ -1,0 +1,28 @@
+.numpad-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    width: 100%;
+}
+
+.numpad-btn {
+    background: white;
+    border: 1px solid rgba(107, 85, 61, 0.2);
+    padding: 1.5rem;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 2rem;
+    color: var(--color-expresso);
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: var(--shadow-soft);
+}
+
+.numpad-btn:hover {
+    background: var(--color-parchment);
+}
+
+.numpad-btn:active {
+    transform: scale(0.95);
+    background: rgba(107, 85, 61, 0.1);
+}

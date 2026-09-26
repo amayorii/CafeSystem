@@ -1,0 +1,55 @@
+@implements IDisposable
+@inject CafeSystem.Client.Services.OrderState OrderState
+
+<div style="padding: 2rem; display: flex; flex-direction: column; height: 100%;">
+    <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; max-width: 400px; margin: 0 auto; width: 100%;">
+
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-bottom: 1.5rem;">
+            <button class="btn-secondary"
+                    style="padding: 0; font-size: 1.2rem; height: 50px; border-color: rgba(107, 85, 61, 0.2);"
+                    @onclick='() => OrderState.SetCash(5)'>$5</button>
+            <button class="btn-secondary"
+                    style="padding: 0; font-size: 1.2rem; height: 50px; border-color: rgba(107, 85, 61, 0.2);"
+                    @onclick='() => OrderState.SetCash(10)'>$10</button>
+            <button class="btn-secondary"
+                    style="padding: 0; font-size: 1.2rem; height: 50px; border-color: rgba(107, 85, 61, 0.2);"
+                    @onclick='() => OrderState.SetCash(20)'>$20</button>
+            <button class="btn-secondary"
+                    style="padding: 0; font-size: 1.2rem; height: 50px; border-color: rgba(107, 85, 61, 0.2);"
+                    @onclick='() => OrderState.SetCash(50)'>$50</button>
+            <button class="btn-secondary"
+                    style="padding: 0; font-size: 1.2rem; height: 50px; border-color: rgba(107, 85, 61, 0.2);"
+                    @onclick='() => OrderState.SetCash(100)'>$100</button>
+            <button class="btn-primary"
+                    style="padding: 0; font-size: 1.2rem; height: 50px; background-color: #2E7D32;"
+                    @onclick='() => OrderState.SetCash(OrderState.Total)'>Exact</button>
+        </div>
+
+        <div class="numpad-grid">
+            <button class="numpad-btn" @onclick='() => OrderState.TypeNumpad("7")'>7</button>
+            <button class="numpad-btn" @onclick='() => OrderState.TypeNumpad("8")'>8</button>
+            <button class="numpad-btn" @onclick='() => OrderState.TypeNumpad("9")'>9</button>
+            <button class="numpad-btn" @onclick='() => OrderState.TypeNumpad("4")'>4</button>
+            <button class="numpad-btn" @onclick='() => OrderState.TypeNumpad("5")'>5</button>
+            <button class="numpad-btn" @onclick='() => OrderState.TypeNumpad("6")'>6</button>
+            <button class="numpad-btn" @onclick='() => OrderState.TypeNumpad("1")'>1</button>
+            <button class="numpad-btn" @onclick='() => OrderState.TypeNumpad("2")'>2</button>
+            <button class="numpad-btn" @onclick='() => OrderState.TypeNumpad("3")'>3</button>
+            <button class="numpad-btn" @onclick='() => OrderState.TypeNumpad(".")'>.</button>
+            <button class="numpad-btn" @onclick='() => OrderState.TypeNumpad("0")'>0</button>
+            <button class="numpad-btn" @onclick='OrderState.ClearNumpad' style="color: #D32F2F;">C</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        OrderState.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        OrderState.OnChange -= StateHasChanged;
+    }
+}

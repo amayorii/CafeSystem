@@ -1,0 +1,91 @@
+@implements IDisposable
+@inject CafeSystem.Client.Services.OrderState OrderState
+
+<div style="padding: 1.5rem; border-bottom: 1px solid rgba(107, 85, 61, 0.1);">
+    <h2 class="font-heading" style="margin: 0;">Current Order</h2>
+    <p style="margin: 0; color: var(--text-secondary); font-size: 0.9rem;">
+        Ticket #@DateTime.Now.ToString("HHmmss")
+    </p>
+</div>
+
+<div style="flex-grow: 1; overflow-y: auto; padding: 1rem;">
+    @if (!OrderState.CurrentOrder.Any())
+    {
+        <div
+            style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-secondary); opacity: 0.5;">
+            <span style="font-size: 3rem; margin-bottom: 1rem;">🛒</span>
+            <p>Order is empty</p>
+        </div>
+    }
+    else
+    {
+        @foreach (var item in OrderState.CurrentOrder)
+        {
+            <div @onclick="() => OrderState.ToggleExpand(item)"
+                 style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px dashed rgba(107, 85, 61, 0.2); cursor: pointer; transition: all 0.2s;">
+
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="font-weight: 600; font-size: 1.1rem; flex-grow: 1;">
+                        @item.Product.Name
+                        @if (!item.IsExpanded)
+                        {
+                            <span
+                                style="color: var(--text-secondary); opacity: 0.5; font-size: 0.9rem; margin-left: 0.5rem; transition: all 0.2s;">x
+                                @item.Quantity</span>
+                        }
+                    </div>
+                    <div style="font-weight: 700; width: 70px; text-align: right; color: var(--color-chambray);">
+                        $@((item.Product.Price * item.Quantity).ToString("0.00"))
+                    </div>
+                </div>
+
+                @if (item.IsExpanded)
+                {
+                    <div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
+                        <div
+                            style="display: flex; align-items: center; gap: 0.8rem; background: var(--bg-primary); padding: 0.3rem; border-radius: 20px;">
+                            <button @onclick="() => OrderState.DecreaseQuantity(item)" @onclick:stopPropagation="true"
+                                    style="border: none; background: white; width: 32px; height: 32px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; color: var(--color-expresso); box-shadow: 0 2px 5px rgba(0,0,0,0.1); font-size: 1.2rem;">-</button>
+                            <span
+                                style="font-weight: 700; min-width: 20px; text-align: center; font-size: 1.2rem;">@item.Quantity</span>
+                            <button @onclick="() => OrderState.IncreaseQuantity(item)" @onclick:stopPropagation="true"
+                                    style="border: none; background: white; width: 32px; height: 32px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; color: var(--color-expresso); box-shadow: 0 2px 5px rgba(0,0,0,0.1); font-size: 1.2rem;">+</button>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    }
+</div>
+
+<div style="padding: 1.5rem; background: var(--bg-primary); border-top: 1px solid rgba(107, 85, 61, 0.1);">
+    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; color: var(--text-secondary);">
+        <span>Subtotal</span>
+        <span>$@OrderState.Subtotal.ToString("0.00")</span>
+    </div>
+    <div style="display: flex; justify-content: space-between; margin-bottom: 1rem; color: var(--text-secondary);">
+        <span>Tax (8%)</span>
+        <span>$@OrderState.Tax.ToString("0.00")</span>
+    </div>
+    <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem; font-size: 1.5rem; font-weight: 700;">
+        <span>Total</span>
+        <span style="color: var(--color-chambray);">$@OrderState.Total.ToString("0.00")</span>
+    </div>
+
+    <button class="btn-primary" disabled="@(!OrderState.CurrentOrder.Any())" @onclick="OrderState.StartCheckout"
+            style="margin-top: 1rem;">
+        PAY $@OrderState.Total.ToString("0.00")
+    </button>
+</div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        OrderState.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        OrderState.OnChange -= StateHasChanged;
+    }
+}
