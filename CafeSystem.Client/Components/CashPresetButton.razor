@@ -1,0 +1,11 @@
+@inject CafeSystem.Client.Services.OrderState OrderState
+
+<button class="btn-secondary" style="padding: 0; font-size: 1.2rem; height: 50px; border-color: rgba(107, 85, 61, 0.2);"
+        @onclick='() => OrderState.SetCash(Amount)'>
+    $@Amount
+</button>
+
+@code {
+    [Parameter]
+    public decimal Amount { get; set; }
+}
