@@ -15,13 +15,13 @@ namespace CafeSystem.Client.Components
         public HttpClient Http { get; set; } = default!;
 
         protected Product[]? Products;
-        protected List<string> Categories = [];
+        protected List<Category> Categories = [];
         protected string SelectedCategory = "All";
 
         protected IEnumerable<Product> FilteredProducts =>
             SelectedCategory == "All"
                 ? (Products ?? [])
-                : (Products?.Where(p => p.Category == SelectedCategory) ?? []);
+                : (Products?.Where(p => p.Category?.Name == SelectedCategory) ?? []);
 
         protected override async Task OnInitializedAsync()
         {
@@ -30,7 +30,10 @@ namespace CafeSystem.Client.Components
                 Products = await Http.GetFromJsonAsync<Product[]>("api/products");
                 if (Products != null)
                 {
-                    Categories = [.. Products.Select(p => p.Category).Distinct()];
+                    Categories = [.. Products
+                        .Where(p => p.Category != null)
+                        .Select(p => p.Category!)
+                        .DistinctBy(c => c.Id)];
                 }
             }
             catch (Exception ex)

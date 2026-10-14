@@ -11,6 +11,7 @@ builder.Services.AddControllers();
 builder.Services.AddScoped<ProductService>();
 builder.Services.AddScoped<OrderService>();
 builder.Services.AddScoped<TransactionService>();
+builder.Services.AddScoped<SupplyPurchaseService>();
 
 builder.Services.AddCors(options =>
 {

@@ -12,7 +12,7 @@ public class BaseService<TEntity, TId> : IBaseService<TEntity, TId> where TEntit
         _db = db;
     }
 
-    public async Task<IEnumerable<TEntity>> GetAllAsync()
+    public virtual async Task<IEnumerable<TEntity>> GetAllAsync()
     {
         return await _db.Set<TEntity>().ToListAsync();
     }

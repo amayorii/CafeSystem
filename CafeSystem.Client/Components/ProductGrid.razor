@@ -15,8 +15,8 @@ else
                 @onclick="@(() => SelectCategory("All"))">All</button>
         @foreach (var category in Categories)
         {
-            <button class="filter-btn @(SelectedCategory == category ? "active" : "")"
-                    @onclick="@(() => SelectCategory(category))">@category</button>
+            <button class="filter-btn @(SelectedCategory == category.Name ? "active" : "")"
+                    @onclick="@(() => SelectCategory(category.Name))">@category.Name</button>
         }
     </div>
 
