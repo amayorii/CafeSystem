@@ -17,7 +17,7 @@ public class BaseService<TEntity, TId> : IBaseService<TEntity, TId> where TEntit
         return await _db.Set<TEntity>().ToListAsync();
     }
 
-    public async Task<TEntity?> GetByIdAsync(TId id)
+    public virtual async Task<TEntity?> GetByIdAsync(TId id)
     {
         // FindAsync is perfect here because it takes a generic object for the key, 
         // regardless of whether it is an int or a Guid.

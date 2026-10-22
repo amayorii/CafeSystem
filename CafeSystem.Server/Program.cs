@@ -12,6 +12,11 @@ builder.Services.AddScoped<ProductService>();
 builder.Services.AddScoped<OrderService>();
 builder.Services.AddScoped<TransactionService>();
 builder.Services.AddScoped<SupplyPurchaseService>();
+builder.Services.AddScoped<CategoryService>();
+builder.Services.AddScoped<CustomerService>();
+builder.Services.AddScoped<EmployeeService>();
+builder.Services.AddScoped<ShiftService>();
+builder.Services.AddScoped<ProductModifierService>();
 
 builder.Services.AddCors(options =>
 {

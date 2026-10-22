@@ -25,5 +25,7 @@ public class Shift
                                                                         .OrderByDescending(x => x.TotalRevenue);
     public decimal TotalTips { get; set; }
 
-    public decimal CalculatedSalary => Employee.BaseSalary + TotalRevenue * (Employee.RevenuePercentage / 100m);
+    public decimal CalculatedSalary => Employee != null 
+        ? Employee.BaseSalary + TotalRevenue * (Employee.RevenuePercentage / 100m) 
+        : 0m;
 }
