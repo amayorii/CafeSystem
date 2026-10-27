@@ -76,8 +76,8 @@ public static class DbSeeder
                 Status = OrderStatus.Open,
                 Items = new List<OrderItem>
                 {
-                    new OrderItem { Product = products[1], Quantity = 2 },
-                    new OrderItem { Product = products[5], Quantity = 1 }
+                    new OrderItem { Product = products[1], Quantity = 2, UnitPrice = products[1].Price },
+                    new OrderItem { Product = products[5], Quantity = 1, UnitPrice = products[5].Price }
                 }
             };
 
@@ -92,8 +92,8 @@ public static class DbSeeder
                 Status = OrderStatus.Closed,
                 Items = new List<OrderItem>
                 {
-                    new OrderItem { Product = products[2], Quantity = 1 },
-                    new OrderItem { Product = products[7], Quantity = 1 }
+                    new OrderItem { Product = products[2], Quantity = 1, UnitPrice = products[2].Price },
+                    new OrderItem { Product = products[7], Quantity = 1, UnitPrice = products[7].Price }
                 }
             };
             await context.Orders.AddAsync(closedOrder);

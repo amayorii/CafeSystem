@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
 using CafeSystem.Shared.Models;
 
 namespace CafeSystem.Client.Services
@@ -14,6 +17,13 @@ namespace CafeSystem.Client.Services
 
     public class OrderState
     {
+        private readonly HttpClient _http;
+
+        public OrderState(HttpClient http)
+        {
+            _http = http;
+        }
+
         // Cart state
         public List<CartItem> CurrentOrder { get; private set; } = new();
 
@@ -27,6 +37,26 @@ namespace CafeSystem.Client.Services
         public string CashInputString { get; private set; } = "";
         public decimal CashTendered { get; private set; } = 0;
         public decimal Change => Math.Max(0, CashTendered - Total);
+
+        // Async submit state
+        public bool IsSubmitting { get; private set; } = false;
+        public string? SubmitError { get; private set; }
+        public Order? LastCompletedOrder { get; private set; }
+        public decimal LastChangeGiven { get; private set; }
+        public bool ShowSuccessModal { get; private set; } = false;
+
+        public bool CanSubmitOrder
+        {
+            get
+            {
+                if (IsSubmitting || !CurrentOrder.Any()) return false;
+                if (SelectedPaymentMethod == "Cash")
+                {
+                    return CashTendered >= Total && Total > 0;
+                }
+                return Total > 0;
+            }
+        }
 
         public event Action? OnChange;
 
@@ -87,6 +117,7 @@ namespace CafeSystem.Client.Services
         public void StartCheckout()
         {
             IsCheckingOut = true;
+            SubmitError = null;
             CashInputString = "";
             CashTendered = 0;
 
@@ -100,6 +131,7 @@ namespace CafeSystem.Client.Services
         public void CancelCheckout()
         {
             IsCheckingOut = false;
+            SubmitError = null;
             NotifyStateChanged();
         }
 
@@ -110,6 +142,7 @@ namespace CafeSystem.Client.Services
                 SelectedPaymentMethod = method;
                 CashInputString = "";
                 CashTendered = 0;
+                SubmitError = null;
                 NotifyStateChanged();
             }
         }
@@ -151,14 +184,70 @@ namespace CafeSystem.Client.Services
             NotifyStateChanged();
         }
 
-        public void SubmitOrder()
+        public async Task<bool> SubmitOrderAsync()
         {
-            Console.WriteLine($"Order submitted. Paid via: {SelectedPaymentMethod}");
-            ClearOrder();
-            CashTendered = 0;
-            CashInputString = "";
-            IsCheckingOut = false;
-            SelectedPaymentMethod = "Card";
+            if (!CanSubmitOrder) return false;
+
+            IsSubmitting = true;
+            SubmitError = null;
+            NotifyStateChanged();
+
+            try
+            {
+                var change = SelectedPaymentMethod == "Cash" ? Change : 0m;
+                var request = new CreateOrderRequest
+                {
+                    PaymentMethod = SelectedPaymentMethod == "Cash" ? PaymentMethod.Cash : PaymentMethod.Card,
+                    CashTendered = SelectedPaymentMethod == "Cash" ? CashTendered : Total,
+                    ChangeGiven = change,
+                    TableNumber = 1,
+                    Items = CurrentOrder.Select(i => new CreateOrderItemDto
+                    {
+                        ProductId = i.Product.Id,
+                        Quantity = i.Quantity,
+                        UnitPrice = i.Product.Price
+                    }).ToList()
+                };
+
+                var response = await _http.PostAsJsonAsync("api/orders/checkout", request);
+                if (response.IsSuccessStatusCode)
+                {
+                    var createdOrder = await response.Content.ReadFromJsonAsync<Order>();
+                    LastCompletedOrder = createdOrder;
+                    LastChangeGiven = change;
+                    ShowSuccessModal = true;
+
+                    ClearOrder();
+                    CashTendered = 0;
+                    CashInputString = "";
+                    IsCheckingOut = false;
+                    SelectedPaymentMethod = "Card";
+                    IsSubmitting = false;
+                    NotifyStateChanged();
+                    return true;
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    SubmitError = string.IsNullOrWhiteSpace(error) ? "Server error occurred during checkout" : error;
+                    IsSubmitting = false;
+                    NotifyStateChanged();
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                SubmitError = $"Connection error: {ex.Message}";
+                IsSubmitting = false;
+                NotifyStateChanged();
+                return false;
+            }
+        }
+
+        public void DismissSuccessModal()
+        {
+            ShowSuccessModal = false;
+            LastCompletedOrder = null;
             NotifyStateChanged();
         }
 

@@ -27,3 +27,115 @@
         }
     </div>
 </div>
+
+@if (OrderState.ShowSuccessModal && OrderState.LastCompletedOrder != null)
+{
+    <div class="order-modal-backdrop" @onclick="OrderState.DismissSuccessModal">
+        <div class="order-modal-card" @onclick:stopPropagation="true">
+            <div class="order-modal-icon">✅</div>
+            <h2 class="order-modal-title">Payment Completed!</h2>
+            <p class="order-modal-subtitle">Order #@OrderState.LastCompletedOrder.Id saved</p>
+
+            <div class="order-modal-details">
+                <div class="order-detail-row">
+                    <span>Items count</span>
+                    <strong>@OrderState.LastCompletedOrder.Items.Sum(i => i.Quantity)</strong>
+                </div>
+                <div class="order-detail-row">
+                    <span>Total Paid</span>
+                    <strong style="color: var(--color-chambray); font-size: 1.3rem;">
+                        $@OrderState.LastCompletedOrder.TotalAmount.ToString("0.00")
+                    </strong>
+                </div>
+                @if (OrderState.LastChangeGiven > 0)
+                {
+                    <div class="order-detail-row" style="background: rgba(46, 125, 50, 0.08); padding: 0.5rem 0.8rem; border-radius: 8px; margin-top: 0.5rem;">
+                        <span style="color: #2E7D32; font-weight: 600;">Change returned</span>
+                        <strong style="color: #2E7D32; font-size: 1.2rem;">
+                            $@OrderState.LastChangeGiven.ToString("0.00")
+                        </strong>
+                    </div>
+                }
+            </div>
+
+            <button class="btn-primary" style="width: 100%; height: 55px; font-size: 1.2rem; border-radius: var(--radius-md); margin-top: 1.5rem;"
+                    @onclick="OrderState.DismissSuccessModal">
+                New Order ➜
+            </button>
+        </div>
+    </div>
+}
+
+<style>
+    .order-modal-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.45);
+        backdrop-filter: blur(4px);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        animation: fadeIn 0.2s ease-out;
+    }
+
+    .order-modal-card {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 2.5rem;
+        max-width: 420px;
+        width: 90%;
+        text-align: center;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        border: 1px solid rgba(107, 85, 61, 0.15);
+        animation: scaleUp 0.25s ease-out;
+    }
+
+    .order-modal-icon {
+        font-size: 3.5rem;
+        margin-bottom: 0.8rem;
+    }
+
+    .order-modal-title {
+        font-family: var(--font-heading);
+        margin: 0 0 0.3rem 0;
+        color: var(--color-expresso);
+        font-size: 1.8rem;
+    }
+
+    .order-modal-subtitle {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        margin: 0 0 1.5rem 0;
+    }
+
+    .order-modal-details {
+        background: var(--bg-primary);
+        border-radius: 12px;
+        padding: 1.2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+        text-align: left;
+    }
+
+    .order-detail-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 1.05rem;
+    }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @@keyframes scaleUp {
+        from { transform: scale(0.9); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
+</style>
